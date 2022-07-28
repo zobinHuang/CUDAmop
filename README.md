@@ -1,6 +1,6 @@
-# CUDAop (CUDA Operators and Profiling)
+# CUDAmop (CUDA Matrix Operators and Profiling)
 
-This repo provides implementations of common CUDA opeartors and corresponding profiling-program suite, including:
+This repo provides implementations of common CUDA matrix opeartors and corresponding profiling-program suite, including:
 
 * Vector Addition
     * **[Basic]** Utilize manually-manaed memory;

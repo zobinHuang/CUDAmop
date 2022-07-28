@@ -10,4 +10,11 @@ __global__ void vectorAdd(
     int d
 );
 
+__global__ void vectorAdd(
+    int *vector_a, 
+    int *vector_b, 
+    int *vector_c, 
+    int d
+);
+
 #endif

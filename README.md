@@ -1,17 +1,20 @@
-# CUDAop (CUDA Operators and Profiler)
+# CUDAop (CUDA Operators and Profiling)
 
-This repo provides implementations of common CUDA opeartors and corresponding profiling program, including:
+This repo provides implementations of common CUDA opeartors and corresponding profiling-program suite, including:
 
 * vector addition
-    * Basic Version
-    * Unified Memory Version
-    * Pin Memory Version
+    * Manually-manaed Memory
+    * Unified Memory
+    * Unified Memory with Prefetching
+
+I also wrote corresponding blogs (in Chinses) for all the underhood details behind these profiling test (available [here](https://zobinhuang.github.io/sec_learning/Tech_OS_And_Linux_Kernel/index.html#cuda)), welcome to read and comments if you have any suggestion.
 
 ## Build Project
 
 ### Preparation
-1. Host equipped with NVIDIA CUDA-capable GPU;
+1. Host equipped with NVIDIA CUDA-capable GPU, see [CUDA GPUs - NVIDIA Developer](https://developer.nvidia.com/cuda-gpus);
 2. OS with NVIDIA Driver and CUDA Tookit installed, to check:
+
 ```bash
 # check driver status
 $ nvidia-smi

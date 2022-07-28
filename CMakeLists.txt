@@ -41,18 +41,25 @@ target_compile_options(
 target_include_directories(_operators PUBLIC include)
 
 # ====================== PROFILING PROGRAM ======================
-# >>> basic vector addition
-file(GLOB_RECURSE SRC_BASIC_VECTOR_ADDITION "profiling/basic_vector_addition/*.cu")
-add_executable(basic_vector_addition ${SRC_BASIC_VECTOR_ADDITION})
+# >>> vector addition
+SET(SRC_VECTOR_ADDITION profiling/vector_addition)
+file(GLOB_RECURSE SRC_VECTOR_ADDITION_CPP ${SRC_VECTOR_ADDITION}/*.cpp)
+add_executable(basic_vector_addition ${SRC_VECTOR_ADDITION}/basic.cu ${SRC_VECTOR_ADDITION_CPP})
+add_executable(unified_vector_addition ${SRC_VECTOR_ADDITION}/unified.cu ${SRC_VECTOR_ADDITION_CPP})
+add_executable(unified_prefetch_vector_addition ${SRC_VECTOR_ADDITION}/unified_prefetch.cu ${SRC_VECTOR_ADDITION_CPP})
 
 # >>> global configuration
 set(PROFILING_TARGETS 
   basic_vector_addition
+  unified_vector_addition
+  unified_prefetch_vector_addition
 )
-target_link_libraries(${PROFILING_TARGETS} _operators nvToolsExt)
-target_compile_features(${PROFILING_TARGETS} PUBLIC cxx_std_11)
-target_include_directories(${PROFILING_TARGETS} PUBLIC include)
-target_compile_options(
-  ${PROFILING_TARGETS} PRIVATE 
-  $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_86,code=sm_86>
-)
+foreach( profiling_target ${PROFILING_TARGETS} )
+  target_link_libraries(${profiling_target} _operators nvToolsExt)
+  target_compile_features(${profiling_target} PUBLIC cxx_std_11)
+  target_include_directories(${profiling_target} PUBLIC include)
+  target_compile_options(
+    ${profiling_target} PRIVATE 
+    $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_86,code=sm_86>
+  )
+endforeach( profiling_target ${PROFILING_TARGETS} )

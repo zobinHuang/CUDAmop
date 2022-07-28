@@ -1,6 +1,6 @@
 /*!
  * \file    vector_addition.cu
- * \brief   Operator for basic version of vector addition
+ * \brief   Operator for vector addition
  * \author  Zhuobin Huang
  * \date    July 25, 2022
  */
@@ -10,7 +10,7 @@
 #include <vector_addition.cuh>
 
 /*!
- * \brief [CUDA Kernel] Conduct Vector Adding (a+b=c)
+ * \brief [CUDA Kernel] Conduct vector adding (a+b=c)
  * \param vector_a  source vector
  * \param vector_b  source vector
  * \param vector_c  destination vector
@@ -28,7 +28,7 @@ __global__ void vectorAdd(
 }
 
 /*!
- * \brief [CUDA Kernel] Conduct Vector Adding (a+b=c)
+ * \brief [CUDA Kernel] Conduct vector adding (a+b=c)
  * \param vector_a  source vector
  * \param vector_b  source vector
  * \param vector_c  destination vector

@@ -14,10 +14,11 @@
 #include <vector_addition.cuh>
 
 void verifyVectorAdditionResult(
-    int *vector_a, 
-    int *vector_b, 
-    int *vector_c,
-    int d);
+  int *vector_a, 
+  int *vector_b, 
+  int *vector_c,
+  int d
+);
 
 int main(){
   // initialize constants
@@ -63,20 +64,20 @@ int main(){
   // number of kernels per block
   int NUM_THREADS_PER_BLOCK = 1 << 10;
 
-  // number of blocks per grid
-  int NUM_BLOCKS_PER_GRID = N % NUM_THREADS_PER_BLOCK == 0 ?
-                            N / NUM_THREADS_PER_BLOCK :
-                            N / NUM_THREADS_PER_BLOCK + 1;
+  // number of blocks in the grid
+  int NUM_BLOCKS =  N % NUM_THREADS_PER_BLOCK == 0 ?
+                    N / NUM_THREADS_PER_BLOCK :
+                    N / NUM_THREADS_PER_BLOCK + 1;
 
   // launch kernel
   PROFILE(
     std::cout << "Launch Kernel: " 
       << NUM_THREADS_PER_BLOCK << " threads per block, " 
-      << NUM_BLOCKS_PER_GRID << " blocks per grid" 
+      << NUM_BLOCKS << " blocks in the grid" 
       << std::endl;
     nvtxRangePush("start kernel");
   )
-  vectorAdd<<<NUM_BLOCKS_PER_GRID, NUM_THREADS_PER_BLOCK>>>(vector_a, vector_b, vector_c, N);
+  vectorAdd<<<NUM_BLOCKS, NUM_THREADS_PER_BLOCK>>>(vector_a, vector_b, vector_c, N);
   
   cudaDeviceSynchronize();
   

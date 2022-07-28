@@ -2,12 +2,16 @@
 
 This repo provides implementations of common CUDA opeartors and corresponding profiling-program suite, including:
 
-* vector addition
-    * Manually-manaed Memory
-    * Unified Memory
-    * Unified Memory with Prefetching
+* Vector Addition
+    * **[Basic]** Utilize manually-manaed memory;
+    * **[UM]** Utilize *unified memory*-based interfaces;
+    * **[UM-optimized]** Utilize unified memory-based interfaces with *prefetching* and *memory hint*;
 
-I also wrote corresponding blogs (in Chinses) for all the underhood details behind these profiling test (available [here](https://zobinhuang.github.io/sec_learning/Tech_OS_And_Linux_Kernel/index.html#cuda)), welcome to read and comments if you have any suggestion.
+* Matrix Multiplication
+    * **[Basic]**
+    * **[Cache-tiled]** Utilize *scratchpad memory* for tiled matrix multiplication;
+
+I also wrote corresponding blogs (in Chinese) for the underhood details behind these profiling test (available [here](https://zobinhuang.github.io/sec_learning/Tech_OS_And_Linux_Kernel/index.html#cuda)), welcome to read and comments if you have any suggestion.
 
 ## Build Project
 
@@ -22,23 +26,7 @@ Wed Jul 27 13:54:53 2022
 +-----------------------------------------------------------------------------+
 | NVIDIA-SMI 470.129.06   Driver Version: 470.129.06   CUDA Version: 11.4     |
 |-------------------------------+----------------------+----------------------+
-| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-|                               |                      |               MIG M. |
-|===============================+======================+======================|
-|   0  NVIDIA RTX A4000    Off  | 00000000:06:10.0 Off |                  Off |
-| 41%   42C    P8    17W / 140W |     10MiB / 16117MiB |      0%      Default |
-|                               |                      |                  N/A |
-+-------------------------------+----------------------+----------------------+
-                                                                               
-+-----------------------------------------------------------------------------+
-| Processes:                                                                  |
-|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
-|        ID   ID                                                   Usage      |
-|=============================================================================|
-|    0   N/A  N/A      1137      G   /usr/lib/xorg/Xorg                  4MiB |
-|    0   N/A  N/A    134697      G   /usr/lib/xorg/Xorg                  4MiB |
-+-----------------------------------------------------------------------------+
+# Your GPU Info ...
 
 # check cuda status
 $ nvcc --version

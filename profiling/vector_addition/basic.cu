@@ -13,9 +13,10 @@
 #include <vector_addition.cuh>
 
 void verifyVectorAdditionResult(
-    std::vector<int> &vector_a, 
-    std::vector<int> &vector_b, 
-    std::vector<int> &vector_c);
+  std::vector<int> &vector_a, 
+  std::vector<int> &vector_b, 
+  std::vector<int> &vector_c
+);
 
 int main(){
   // initialize constants
@@ -60,20 +61,20 @@ int main(){
   // number of kernels per block
   int NUM_THREADS_PER_BLOCK = 1 << 10;
 
-  // number of blocks per grid
-  int NUM_BLOCKS_PER_GRID = N % NUM_THREADS_PER_BLOCK == 0 ?
-                            N / NUM_THREADS_PER_BLOCK :
-                            N / NUM_THREADS_PER_BLOCK + 1;
-  
+  // number of blocks in the grid
+  int NUM_BLOCKS =  N % NUM_THREADS_PER_BLOCK == 0 ?
+                    N / NUM_THREADS_PER_BLOCK :
+                    N / NUM_THREADS_PER_BLOCK + 1;
+
   // launch kernel
   PROFILE(
     std::cout << "Launch Kernel: " 
       << NUM_THREADS_PER_BLOCK << " threads per block, " 
-      << NUM_BLOCKS_PER_GRID << " blocks per grid" 
+      << NUM_BLOCKS << " blocks in the grid" 
       << std::endl;
     nvtxRangePush("start kernel");
   )
-  vectorAdd<<<NUM_BLOCKS_PER_GRID, NUM_THREADS_PER_BLOCK>>>(d_vector_a, d_vector_b, d_vector_c, N);
+  vectorAdd<<<NUM_BLOCKS, NUM_THREADS_PER_BLOCK>>>(d_vector_a, d_vector_b, d_vector_c, N);
   PROFILE(
     // cudaDeviceSynchronize is not necessary as following cudaMemcpy would
     // act as synchronization barrier, used here for profiling log
@@ -82,7 +83,7 @@ int main(){
   )
   
   // copy result back to host memory
-  PROFILE(nvtxRangePush("copy vectors from device to host memory");)
+  PROFILE(nvtxRangePush("copy vector from device to host memory");)
   cudaMemcpy(vector_c.data(), d_vector_c, vector_size, cudaMemcpyDeviceToHost);
   PROFILE(nvtxRangePop();)
 

@@ -10,6 +10,7 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
 * Matrix Multiplication
     * **[Basic]**
     * **[Cache-tiled]** Utilize *scratchpad memory* for tiled matrix multiplication;
+    * **[Coalescing-accessed]** Align memory access pattern through matrix transposing;
 
 I also wrote corresponding blogs (in Chinese) for the underhood details behind these profiling test (available [here](https://zobinhuang.github.io/sec_learning/Tech_OS_And_Linux_Kernel/index.html#cuda)), welcome to read and comments if you have any suggestion.
 

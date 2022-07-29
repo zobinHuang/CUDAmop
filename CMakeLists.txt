@@ -53,6 +53,7 @@ SET(SRC_MATRIX_MULTIPLICATION profiling/matrix_multiplication)
 file(GLOB_RECURSE SRC_MATRIX_MULTIPLICATION_CPP ${SRC_MATRIX_MULTIPLICATION}/*.cpp)
 add_executable(basic_matrix_multiplication ${SRC_MATRIX_MULTIPLICATION}/basic.cu ${SRC_MATRIX_MULTIPLICATION_CPP})
 add_executable(tiled_matrix_multiplication ${SRC_MATRIX_MULTIPLICATION}/tiled.cu ${SRC_MATRIX_MULTIPLICATION_CPP})
+add_executable(aligned_matrix_multiplication ${SRC_MATRIX_MULTIPLICATION}/aligned.cu ${SRC_MATRIX_MULTIPLICATION_CPP})
 
 # >>> global configuration
 set(PROFILING_TARGETS 
@@ -61,6 +62,7 @@ set(PROFILING_TARGETS
   unified_prefetch_vector_addition
   basic_matrix_multiplication
   tiled_matrix_multiplication
+  aligned_matrix_multiplication
 )
 foreach( profiling_target ${PROFILING_TARGETS} )
   target_link_libraries(${profiling_target} _operators nvToolsExt)

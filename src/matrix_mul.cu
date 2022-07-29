@@ -43,6 +43,39 @@ __global__ void squareMatrixMul(
 
 /*!
  * \brief [CUDA Kernel] Conduct square matrix multiplication (A*B=C)
+ *        with aligned memory access pattern
+ * \param matrix_A  source matrix
+ * \param matrix_B  source matrix (after transposed)
+ * \param matrix_C  destination matrix
+ * \param d         dimension of square matrix
+ */
+__global__ void alignedSquareMatrixMul(
+    const int *matrix_A,
+    const int *matrix_B,
+    int *matrix_C,
+    const int d){
+  // check kernel shape
+  assert(blockDim.x == blockDim.y);
+  assert(gridDim.x == gridDim.y);
+
+  // obtain corresponding row and column for current thread
+  int row_index = blockIdx.y * blockDim.y + threadIdx.y;
+  int col_index = blockIdx.x * blockDim.x + threadIdx.x;
+
+  // initialize destination element
+  int dest_index = row_index*d+col_index;
+  matrix_C[dest_index] = 0;
+
+  // sum of product
+  if(dest_index < d*d){
+    for(int i=0; i<d; i++){
+      matrix_C[dest_index] += matrix_A[row_index*d+i] * matrix_B[col_index*d+i];
+    }
+  }
+}
+
+/*!
+ * \brief [CUDA Kernel] Conduct square matrix multiplication (A*B=C)
  *        based on cache tiling, make sure tile size is equal to 
  *        block size
  * \param matrix_A  source matrix

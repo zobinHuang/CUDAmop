@@ -1,6 +1,6 @@
 /*!
- * \file    verify.cpp
- * \brief   Functions for verify vector addition result
+ * \file    utils.cpp
+ * \brief   Utilization function set
  * \author  Zhuobin Huang
  * \date    July 27, 2022
  */

@@ -12,7 +12,15 @@ __global__ void squareMatrixMul(
     const int *matrix_A,
     const int *matrix_B,
     int *matrix_C,
-    int d
+    const int d
+);
+
+__global__ void tiledSquareMatrixMul(
+    const int *matrix_A,
+    const int *matrix_B,
+    int *matrix_C,
+    const int tile_size,
+    const int d
 );
 
 #endif

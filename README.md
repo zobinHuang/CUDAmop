@@ -4,16 +4,14 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
 
 <table>
     <tr>
+        <td align="center" colspan="4">Vector Addition</td>
+    </tr>
+    <tr>
         <th align="center">Version</th>
-        <th align="center">Description</th>
         <th align="center">Operator</th>
         <th align="center">Profiling Program</th>
     </tr>
     <tr>
-        <td align="center" colspan="4">Vector Addition</td>
-    </tr>
-    <tr>
-        <td align="center">Basic</td>
         <td>Utilize manually-manaed memory</td>
         <td>
             <code>src/vector_addition.cu</code>
@@ -22,7 +20,6 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         <td><code>profiling/vector_addition/basic.cu</code></td>
     </tr>
     <tr>
-        <td align="center">UM</td>
         <td>Utilize unified memory-based interfaces</td>
         <td>
             <code>src/vector_addition.cu</code>
@@ -31,7 +28,6 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         <td><code>profiling/vector_addition/unified.cu</code></td>
     </tr>
     <tr>
-        <td align="center">UM-optimized</td>
         <td>Utilize unified memory-based interfaces with prefetching and memory hint</td>
         <td>
             <code>src/vector_addition.cu</code>
@@ -43,7 +39,11 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         <td align="center" colspan="4">Squared Matrix Multiplication</td>
     </tr>
     <tr>
-        <td align="center">Basic</td>
+        <th align="center">Version</th>
+        <th align="center">Operator</th>
+        <th align="center">Profiling Program</th>
+    </tr>
+    <tr>
         <td>Naive version of squared matrix multiplication</td>
         <td>
             <code>src/matrix_mul.cu</code>
@@ -52,7 +52,6 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         <td><code>profiling/matrix_multiplication/basic.cu</code></td>
     </tr>
     <tr>
-        <td align="center">Coalescing-accessed</td>
         <td>Align memory access pattern through matrix transposing</td>
         <td>
             <code>src/matrix_mul.cu</code>
@@ -61,7 +60,6 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         <td><code>profiling/matrix_multiplication/aligned.cu</code></td>
     </tr>
     <tr>
-        <td align="center">Cache-tiled</td>
         <td>Utilize scratchpad memory for tiled matrix multiplication</td>
         <td>
             <code>src/matrix_mul.cu</code>

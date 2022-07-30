@@ -2,15 +2,74 @@
 
 This repo provides implementations of common CUDA matrix opeartors and corresponding profiling-program suite, including:
 
-* Vector Addition
-    * **[Basic]** Utilize manually-manaed memory;
-    * **[UM]** Utilize *unified memory*-based interfaces;
-    * **[UM-optimized]** Utilize unified memory-based interfaces with *prefetching* and *memory hint*;
-
-* Matrix Multiplication
-    * **[Basic]**
-    * **[Cache-tiled]** Utilize *scratchpad memory* for tiled matrix multiplication;
-    * **[Coalescing-accessed]** Align memory access pattern through matrix transposing;
+<table>
+    <tr>
+        <th align="center">Version</th>
+        <th align="center">Description</th>
+        <th align="center">Operator</th>
+        <th align="center">Profiling Program</th>
+    </tr>
+    <tr>
+        <td align="center" colspan="4">Vector Addition</td>
+    </tr>
+    <tr>
+        <td align="center">Basic</td>
+        <td>Utilize manually-manaed memory</td>
+        <td>
+            <code>src/vector_addition.cu</code>
+            <br><code>vectorAdd</code>
+        </td>
+        <td><code>profiling/vector_addition/basic.cu</code></td>
+    </tr>
+    <tr>
+        <td align="center">UM</td>
+        <td>Utilize unified memory-based interfaces</td>
+        <td>
+            <code>src/vector_addition.cu</code>
+            <br><code>vectorAdd</code>
+        </td>
+        <td><code>profiling/vector_addition/unified.cu</code></td>
+    </tr>
+    <tr>
+        <td align="center">UM-optimized</td>
+        <td>Utilize unified memory-based interfaces with prefetching and memory hint</td>
+        <td>
+            <code>src/vector_addition.cu</code>
+            <br><code>vectorAdd</code>
+        </td>
+        <td><code>profiling/vector_addition/unified_prefetch.cu</code></td>
+    </tr>
+    <tr>
+        <td align="center" colspan="4">Squared Matrix Multiplication</td>
+    </tr>
+    <tr>
+        <td align="center">Basic</td>
+        <td>Naive version of squared matrix multiplication</td>
+        <td>
+            <code>src/matrix_mul.cu</code>
+            <br><code>squareMatrixMul</code>
+        </td>
+        <td><code>profiling/matrix_multiplication/basic.cu</code></td>
+    </tr>
+    <tr>
+        <td align="center">Coalescing-accessed</td>
+        <td>Align memory access pattern through matrix transposing</td>
+        <td>
+            <code>src/matrix_mul.cu</code>
+            <br><code>alignedSquareMatrixMul</code>
+        </td>
+        <td><code>profiling/matrix_multiplication/aligned.cu</code></td>
+    </tr>
+    <tr>
+        <td align="center">Cache-tiled</td>
+        <td>Utilize scratchpad memory for tiled matrix multiplication</td>
+        <td>
+            <code>src/matrix_mul.cu</code>
+            <br><code>tiledSquareMatrixMul</code>
+        </td>
+        <td><code>profiling/matrix_multiplication/tiled.cu</code></td>
+    </tr>
+</table>
 
 I also wrote corresponding blogs (in Chinese) for the underhood details behind these profiling test (available [here](https://zobinhuang.github.io/sec_learning/Tech_OS_And_Linux_Kernel/index.html#cuda)), welcome to read and comments if you have any suggestion.
 

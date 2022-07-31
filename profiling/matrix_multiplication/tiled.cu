@@ -72,7 +72,7 @@ int main(){
   dim3 blocks(NUM_BLOCKS, NUM_BLOCKS);
 
   // obtain shared memory size for each thread block
-  int shared_memory_size = 2*NUM_THREADS_PER_BLOCK*NUM_THREADS_PER_BLOCK*sizeof(int);
+  int shared_memory_size = 2*NUM_THREADS_PER_BLOCK*NUM_THREADS_PER_BLOCK*unit_size;
 
   // launch kernel
   PROFILE(

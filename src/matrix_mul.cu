@@ -5,7 +5,6 @@
  * \date    July 28, 2022
  */
 
-#include <stdio.h>
 #include <matrix_mul.cuh>
 #include <cassert>
 
@@ -95,7 +94,7 @@ __global__ void tiledSquareMatrixMul(
   assert(gridDim.x == gridDim.y);
   assert(tile_size == blockDim.x);
   
-  // declare share memory are for submatrix
+  // obtained shared memory area (dynamic allocated)
   extern __shared__ int tile[];
   int* tile_A = tile;
   int* tile_B = tile+tile_size*tile_size;

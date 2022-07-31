@@ -67,6 +67,22 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         </td>
         <td><code>profiling/matrix_multiplication/tiled.cu</code></td>
     </tr>
+    <tr>
+        <td align="center" colspan="4">Sum Reduction</td>
+    </tr>
+    <tr>
+        <th align="center">Version</th>
+        <th align="center">Operator</th>
+        <th align="center">Profiling Program</th>
+    </tr>
+    <tr>
+        <td>Naive implementation</td>
+        <td>
+            <code>src/sum_reduction.cu</code>
+            <br><code>sumReduction</code>
+        </td>
+        <td><code>profiling/sum_reduction/basic.cu</code></td>
+    </tr>
 </table>
 
 I also wrote corresponding blogs (in Chinese) for the underhood details behind these profiling test (available [here](https://zobinhuang.github.io/sec_learning/Tech_OS_And_Linux_Kernel/index.html#cuda)), welcome to read and comments if you have any suggestion.
@@ -134,7 +150,8 @@ then profiling executables can be obtained under `[path to root]/bin`, operator 
 
 ## Profiling
 
-Profiling files under `result` are tested using NVIDIA A4000
+### Preparation
+Both on the server and client side, with NVIDIA Nsight System installed, see [NVIDIA Nsight Systems](https://developer.nvidia.com/nsight-systems).
 
 ### Usage
 
@@ -142,3 +159,5 @@ Profiling files under `result` are tested using NVIDIA A4000
 cd [path to root]
 nsys profile -o result/[target name] [path to root]/bin/[target name]
 ```
+
+Profiling files under `result` are tested using NVIDIA A4000

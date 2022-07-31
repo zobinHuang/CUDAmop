@@ -59,6 +59,7 @@ add_executable(aligned_matrix_multiplication ${SRC_MATRIX_MULTIPLICATION}/aligne
 SET(SRC_SUM_REDUCTION profiling/sum_reduction)
 file(GLOB_RECURSE SRC_SUM_REDUCTION_CPP ${SRC_SUM_REDUCTION}/*.cpp)
 add_executable(basic_sum_reduction ${SRC_SUM_REDUCTION}/basic.cu ${SRC_SUM_REDUCTION_CPP})
+add_executable(non_divergence_sum_reduction ${SRC_SUM_REDUCTION}/non_divergence.cu ${SRC_SUM_REDUCTION_CPP})
 
 # >>> global configuration
 set(PROFILING_TARGETS 
@@ -69,6 +70,7 @@ set(PROFILING_TARGETS
   tiled_matrix_multiplication
   aligned_matrix_multiplication
   basic_sum_reduction
+  non_divergence_sum_reduction
 )
 foreach( profiling_target ${PROFILING_TARGETS} )
   target_link_libraries(${profiling_target} _operators nvToolsExt)

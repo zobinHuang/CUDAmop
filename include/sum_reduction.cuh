@@ -13,4 +13,9 @@ __global__ void sumReduction(
     int *dest_array
 );
 
+__global__ void nonDivergenceSumReduction(
+    int *soure_array, 
+    int *dest_array
+);
+
 #endif

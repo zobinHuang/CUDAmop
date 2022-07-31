@@ -83,6 +83,14 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         </td>
         <td><code>profiling/sum_reduction/basic.cu</code></td>
     </tr>
+    <tr>
+        <td>Implementation without warp divergence</td>
+        <td>
+            <code>src/sum_reduction.cu</code>
+            <br><code>nonDivergenceSumReduction</code>
+        </td>
+        <td><code>profiling/sum_reduction/non_divergence.cu</code></td>
+    </tr>
 </table>
 
 I also wrote corresponding blogs (in Chinese) for the underhood details behind these profiling test (available [here](https://zobinhuang.github.io/sec_learning/Tech_OS_And_Linux_Kernel/index.html#cuda)), welcome to read and comments if you have any suggestion.

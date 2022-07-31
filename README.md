@@ -133,4 +133,12 @@ make
 then profiling executables can be obtained under `[path to root]/bin`, operator library can be obtained under `[path to root]/lib`
 
 ## Profiling
-TODO
+
+Profiling files under `result` are tested using NVIDIA A4000
+
+### Usage
+
+```bash
+cd [path to root]
+nsys profile -o result/[target name] [path to root]/bin/[target name]
+```

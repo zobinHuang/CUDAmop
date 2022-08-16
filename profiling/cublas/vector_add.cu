@@ -52,7 +52,7 @@ int main(){
     vectorRandomInit(vector_b, N);
     PROFILE(nvtxRangePop();)
 
-    // create and initialize a new context
+    // create and initialize a new cuBLAS context
     PROFILE(nvtxRangePush("create cuBLAS context");)
     cublasHandle_t handle;
     cublasCreate_v2(&handle);
@@ -64,10 +64,11 @@ int main(){
     cublasSetVector(N, unit_size, vector_b, 1, d_vector_b, 1);
     PROFILE(nvtxRangePop();)
 
-    // launch saxpy kernel (single precision a*x+y)
+    // launch saxpy kernel (single precision)
+    // d_vector_b = alpha*d_vector_a + d_vector_b
+    const float alpha = 2.0f;
     PROFILE(nvtxRangePush("launch cuBLAS Saxpy kernel");)
-    const float scale = 2.0f;
-    cublasSaxpy_v2(handle, N, &scale, d_vector_a, 1, d_vector_b, 1);
+    cublasSaxpy_v2(handle, N, &alpha, d_vector_a, 1, d_vector_b, 1);
     PROFILE(nvtxRangePop();)
 
     // copy the result to host
@@ -77,7 +78,7 @@ int main(){
 
     // verify the result
     PROFILE(nvtxRangePush("verify calculation result");)
-    verifyVectorAdditionResult(vector_a, vector_b, vector_c, scale, N);
+    verifyVectorAdditionResult(vector_a, vector_b, vector_c, alpha, N);
     PROFILE(nvtxRangePop();)
 
     // clean up cublas context

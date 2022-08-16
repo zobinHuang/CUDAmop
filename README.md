@@ -75,6 +75,13 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         <td><code>profiling/matrix_multiplication/tiled.cu</code></td>
     </tr>
     <tr>
+        <td>cuBLAS</td>
+        <td>
+            <code>cublasSgemm_v2</code>
+        </td>
+        <td><code>profiling/cublas/matrix_multiplication.cu</code></td>
+    </tr>
+    <tr>
         <td align="center" colspan="4">Sum Reduction</td>
     </tr>
     <tr>

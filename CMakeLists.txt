@@ -61,6 +61,11 @@ file(GLOB_RECURSE SRC_SUM_REDUCTION_CPP ${SRC_SUM_REDUCTION}/*.cpp)
 add_executable(basic_sum_reduction ${SRC_SUM_REDUCTION}/basic.cu ${SRC_SUM_REDUCTION_CPP})
 add_executable(non_divergence_sum_reduction ${SRC_SUM_REDUCTION}/non_divergence.cu ${SRC_SUM_REDUCTION_CPP})
 
+# >>> cuBLAS
+SET(SRC_CUBLAS profiling/cublas)
+file(GLOB_RECURSE SRC_CUBLAS_CPP ${SRC_CUBLAS}/*.cpp)
+add_executable(cublas_vector_addition ${SRC_CUBLAS}/vector_add.cu ${SRC_CUBLAS_CPP})
+
 # >>> global configuration
 set(PROFILING_TARGETS 
   basic_vector_addition
@@ -71,9 +76,10 @@ set(PROFILING_TARGETS
   aligned_matrix_multiplication
   basic_sum_reduction
   non_divergence_sum_reduction
+  cublas_vector_addition
 )
 foreach( profiling_target ${PROFILING_TARGETS} )
-  target_link_libraries(${profiling_target} _operators nvToolsExt)
+  target_link_libraries(${profiling_target} _operators nvToolsExt -lcublas)
   target_compile_features(${profiling_target} PUBLIC cxx_std_11)
   target_include_directories(${profiling_target} PUBLIC include)
   target_compile_options(

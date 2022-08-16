@@ -36,6 +36,13 @@ This repo provides implementations of common CUDA matrix opeartors and correspon
         <td><code>profiling/vector_addition/unified_prefetch.cu</code></td>
     </tr>
     <tr>
+        <td>cuBLAS</td>
+        <td>
+            <code>cublasSaxpy_v2</code>
+        </td>
+        <td><code>profiling/cublas/vector_add.cu</code></td>
+    </tr>
+    <tr>
         <td align="center" colspan="4">Squared Matrix Multiplication</td>
     </tr>
     <tr>

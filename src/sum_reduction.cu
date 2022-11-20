@@ -5,6 +5,7 @@
  * \date    July 31, 2022
  */
 
+#include <stdio.h>
 
 /*!
  * \brief [CUDA Kernel] Conduct naive sum reduction (per thread block)

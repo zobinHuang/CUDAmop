@@ -8,6 +8,8 @@
 #ifndef _MATRIX_MUL_H_
 #define _MATRIX_MUL_H_
 
+#include<stdint.h>
+
 __global__ void squareMatrixMul(
     const int *matrix_A,
     const int *matrix_B,

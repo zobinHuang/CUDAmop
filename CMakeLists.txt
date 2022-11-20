@@ -15,6 +15,7 @@ execute_process( COMMAND ${CMAKE_COMMAND} -E make_directory ../${PATH_LIBRARY})
 SET(LIBRARY_OUTPUT_PATH ../${PATH_LIBRARY})
 
 # find CUDA Toolkit Extension library
+set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda-11.7)
 find_library(CUDA_NVTX_LIBRARY
   NAMES nvToolsExt nvTools nvtoolsext nvtools nvtx NVTX
   PATHS "${CUDA_CUDART_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}" ENV LD_LIBRARY_PATH
@@ -29,7 +30,7 @@ add_library(_operators ${SRC_OPERATORS})
 target_compile_features(_operators PUBLIC cxx_std_11)
 target_compile_options(
   _operators PUBLIC 
-  $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_86,code=sm_86>
+  $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_80,code=sm_80>
 )
 
 # Don't do following operation!
@@ -67,6 +68,11 @@ file(GLOB_RECURSE SRC_CUBLAS_CPP ${SRC_CUBLAS}/*.cpp)
 add_executable(cublas_vector_addition ${SRC_CUBLAS}/vector_add.cu ${SRC_CUBLAS_CPP})
 add_executable(cublas_matrix_multiplication ${SRC_CUBLAS}/matrix_multiplication.cu ${SRC_CUBLAS_CPP})
 
+# >>> SpMV
+SET(SRC_SPMV profiling/spmv)
+file(GLOB_RECURSE SRC_SPMV_CPP ${SRC_SPMV}/*.cpp)
+add_executable(basic_spmv ${SRC_SPMV}/basic.cu ${SRC_SPMV_CPP})
+
 # >>> global configuration
 set(PROFILING_TARGETS 
   basic_vector_addition
@@ -79,6 +85,7 @@ set(PROFILING_TARGETS
   non_divergence_sum_reduction
   cublas_vector_addition
   cublas_matrix_multiplication
+  basic_spmv
 )
 foreach( profiling_target ${PROFILING_TARGETS} )
   target_link_libraries(${profiling_target} _operators nvToolsExt -lcublas -lcurand)
@@ -86,6 +93,6 @@ foreach( profiling_target ${PROFILING_TARGETS} )
   target_include_directories(${profiling_target} PUBLIC include)
   target_compile_options(
     ${profiling_target} PRIVATE 
-    $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_86,code=sm_86>
+    $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_80,code=sm_80>
   )
 endforeach( profiling_target ${PROFILING_TARGETS} )

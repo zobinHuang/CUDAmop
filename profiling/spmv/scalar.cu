@@ -23,6 +23,16 @@ void generateRandomCSR(
     std::vector<float> &data
 );
 
+void SpMVSeq(
+    const uint64_t row_size,
+    const uint64_t num_row,
+    std::vector<uint64_t> &col_ids,
+    std::vector<uint64_t> &row_ptr,
+    std::vector<float> &data,
+    std::vector<float> &x,
+    std::vector<float> &result
+);
+
 void verifySpMVResult(
     const uint64_t row_size,
     const uint64_t num_row,
@@ -35,20 +45,16 @@ void verifySpMVResult(
 
 int main(){
     // initialize constants
-    constexpr uint64_t row_size = 1 << 10;
+    constexpr uint64_t row_size = 1 << 20;
     constexpr uint64_t num_row = 1 << 10;
     uint64_t elem_cnt = row_size*num_row;
-    uint64_t nnz = (uint64_t)((double)elem_cnt*0.1);
+    uint64_t nnz = (uint64_t)((double)elem_cnt*0.5);
     uint64_t unit_size = sizeof(float);
 
     // create vector in host memory
-   
-    PROFILE(
-        std::cout << "allocate host memory for three vectors" << std::endl;
-        nvtxRangePush("allocate host memory for three vectors");
-    )
-    std::vector<uint64_t> col_ids;  // CSR col indices
-    std::vector<uint64_t> row_ptr;  // CSR row pointers
+    PROFILE(nvtxRangePush("allocate host memory for vectors");)
+    std::vector<uint64_t> col_ids;      // CSR col indices
+    std::vector<uint64_t> row_ptr;      // CSR row pointers
     std::vector<float> data;            // CSR data
     std::vector<float> x;               // the multiplied vector
     x.reserve(row_size);
@@ -57,22 +63,15 @@ int main(){
     PROFILE(nvtxRangePop();)
 
     // initialize random value
-    PROFILE(
-        std::cout << "initialize matrix and vector with random numbers" << std::endl;
-        nvtxRangePush("initialize matrix and vector with random numbers");
-    )
+    PROFILE(nvtxRangePush("initialize matrix and vector with random numbers");)
     generateRandomCSR(row_size, elem_cnt, nnz, col_ids, row_ptr, data);
     for (int i=0; i<row_size; i++){
         x.push_back(generateRandomValue());
     }
-
     PROFILE(nvtxRangePop();)
 
     // allocate memory space on device
-    PROFILE(
-        std::cout << "allocate memory space on device" << std::endl;
-        nvtxRangePush("allocate memory space on device");
-    )
+    PROFILE(nvtxRangePush("allocate memory space on device");)
     uint64_t *d_col_ids, *d_row_ptr;
     float *d_data, *d_x, *d_y;
     cudaMalloc(&d_col_ids,  sizeof(uint64_t)*col_ids.size());
@@ -83,10 +82,7 @@ int main(){
     PROFILE(nvtxRangePop();)
 
     // copy data from host memory to device memory
-    PROFILE(
-        std::cout << "copy data from host to device memory" << std::endl;
-        nvtxRangePush("copy data from host to device memory");
-    )
+    PROFILE(nvtxRangePush("copy data from host to device memory");)
     cudaMemcpy(d_col_ids, col_ids.data(), sizeof(uint64_t)*col_ids.size(), cudaMemcpyHostToDevice);
     cudaMemcpy(d_row_ptr, row_ptr.data(), sizeof(uint64_t)*row_ptr.size(), cudaMemcpyHostToDevice);
     cudaMemcpy(d_data, data.data(), unit_size*data.size(), cudaMemcpyHostToDevice);
@@ -102,15 +98,15 @@ int main(){
                         num_row / NUM_THREADS_PER_BLOCK :
                         num_row / NUM_THREADS_PER_BLOCK + 1;
 
-    // launch kernel
+    // launch naive kernel
     PROFILE(
         std::cout << "Launch Kernel: " 
         << NUM_THREADS_PER_BLOCK << " threads per block, " 
         << NUM_BLOCKS << " blocks in the grid" 
         << std::endl;
-        nvtxRangePush("start kernel");
+        nvtxRangePush("launch naive kernel");
     )
-    naiveCSRSpMV<<<NUM_BLOCKS, NUM_THREADS_PER_BLOCK>>>(num_row, d_col_ids, d_row_ptr, d_data, d_x, d_y);
+    CSRSpMVScalar<<<NUM_BLOCKS, NUM_THREADS_PER_BLOCK>>>(num_row, d_col_ids, d_row_ptr, d_data, d_x, d_y);
     PROFILE(
         // cudaDeviceSynchronize is not necessary as following cudaMemcpy would
         // act as synchronization barrier, used here for profiling log
@@ -122,21 +118,20 @@ int main(){
     )
 
     // copy result back to host memory
-    PROFILE(
-        std::cout << "copy vector from device to host memory" << std::endl;
-        nvtxRangePush("copy vector from device to host memory");
-    )
+    PROFILE(nvtxRangePush("copy vector from device to host memory");)
     cudaMemcpy(y.data(), d_y, unit_size*num_row, cudaMemcpyDeviceToHost);
     PROFILE(nvtxRangePop();)
 
     // verify result
     verifySpMVResult(row_size, num_row, col_ids, row_ptr, data, x, y);
 
+    std::vector<float> result(num_row, 0);
+    PROFILE(nvtxRangePush("sequence implementation");)
+    SpMVSeq(row_size, num_row, col_ids, row_ptr, data, x, result);
+    PROFILE(nvtxRangePop();)
+
     // free device memory
-    PROFILE(
-        std::cout << "free device memory" << std::endl;
-        nvtxRangePush("free device memory");
-    )
+    PROFILE(nvtxRangePush("free device memory");)
     cudaFree(d_col_ids);
     cudaFree(d_row_ptr);
     cudaFree(d_data);

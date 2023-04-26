@@ -10,7 +10,16 @@
 
 #include<stdint.h>
 
-__global__ void naiveCSRSpMV(
+__global__ void CSRSpMVScalar(
+    const uint64_t n_rows,
+    const uint64_t *col_ids,
+    const uint64_t *row_ptr,
+    const float *data,
+    const float *x,
+    float *y
+);
+
+__global__ void CSRSpMVVector (
     const uint64_t n_rows,
     const uint64_t *col_ids,
     const uint64_t *row_ptr,

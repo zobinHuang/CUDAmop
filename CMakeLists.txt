@@ -71,7 +71,8 @@ add_executable(cublas_matrix_multiplication ${SRC_CUBLAS}/matrix_multiplication.
 # >>> SpMV
 SET(SRC_SPMV profiling/spmv)
 file(GLOB_RECURSE SRC_SPMV_CPP ${SRC_SPMV}/*.cpp)
-add_executable(basic_spmv ${SRC_SPMV}/basic.cu ${SRC_SPMV_CPP})
+add_executable(spmv_csr_scalar ${SRC_SPMV}/scalar.cu ${SRC_SPMV_CPP})
+add_executable(spmv_csr_vector ${SRC_SPMV}/vector.cu ${SRC_SPMV_CPP})
 
 # >>> global configuration
 set(PROFILING_TARGETS 
@@ -85,7 +86,8 @@ set(PROFILING_TARGETS
   non_divergence_sum_reduction
   cublas_vector_addition
   cublas_matrix_multiplication
-  basic_spmv
+  spmv_csr_scalar
+  spmv_csr_vector
 )
 foreach( profiling_target ${PROFILING_TARGETS} )
   target_link_libraries(${profiling_target} _operators nvToolsExt -lcublas -lcurand)
@@ -93,6 +95,7 @@ foreach( profiling_target ${PROFILING_TARGETS} )
   target_include_directories(${profiling_target} PUBLIC include)
   target_compile_options(
     ${profiling_target} PRIVATE 
+    # 编译器前后端: arch -> IR, code -> 后端 binary (针对硬件的二进制，小版本号兼容 sm_80 -> sm_86)
     $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_80,code=sm_80>
   )
 endforeach( profiling_target ${PROFILING_TARGETS} )

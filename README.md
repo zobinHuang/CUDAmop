@@ -179,7 +179,7 @@ Both on the server and client side, with NVIDIA Nsight System installed, see [NV
 
 ```bash
 cd [path to root]
-nsys profile -o result/[target name] [path to root]/bin/[target name]
+nsys profile --force-overwrite true -o result/[target name] [path to root]/bin/[target name]
 ```
 
 Profiling files under `result` are tested using NVIDIA A4000

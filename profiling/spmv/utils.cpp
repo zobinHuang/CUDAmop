@@ -10,6 +10,7 @@
 #include <cassert>
 #include <stdint.h>
 #include <register.h>
+#include <sys/time.h>
 
 float generateRandomValue(){
     if( 
@@ -29,6 +30,26 @@ float generateRandomValue(){
     } else {
         std::cout << "Unknown type name " << typeid(float).name() << std::endl;
         return static_cast<float>(1);
+    }
+}
+
+void SpMVSeq(
+    const uint64_t row_size,
+    const uint64_t num_row,
+    std::vector<uint64_t> &col_ids,
+    std::vector<uint64_t> &row_ptr,
+    std::vector<float> &data,
+    std::vector<float> &x,
+    std::vector<float> &result
+){
+    for(uint64_t row=0; row<num_row; row++){
+        const uint64_t row_start = row_ptr[row];
+        const uint64_t row_end = row_ptr[row+1];
+        float sum = 0;
+        for(uint64_t i=row_start; i<row_end; i++){
+            sum += data[i] * x[col_ids[i]];
+        }
+        result[row] = sum;
     }
 }
 
@@ -54,6 +75,7 @@ void verifySpMVResult(
     }
 
     for(uint64_t row=0; row<num_row; row++){
+        // std::cout << "result: " << result[row] << "; correct result: " << correct_result[row] << std::endl;
         assert(abs(result[row]-correct_result[row]) <= 0.00001);
     }
 }

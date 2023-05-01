@@ -25,7 +25,7 @@ find_library(CUDA_NVTX_LIBRARY
 )
 
 # ====================== OPERATOR LIBRARY ======================
-file(GLOB_RECURSE SRC_OPERATORS "src/*.cu" "src/*.cpp")
+file(GLOB_RECURSE SRC_OPERATORS "src/**/*.cu" "src/**/*.cpp")
 add_library(_operators ${SRC_OPERATORS})
 target_compile_features(_operators PUBLIC cxx_std_11)
 target_compile_options(

@@ -8,6 +8,7 @@
 #include "cudamop.cuh"
 #include "gpu_utils.cuh"
 #include "math_util.cuh"
+#include "sort.cuh"
 
 /*!
  * \brief   obtain the overall share memory size that the heap occupies
@@ -33,7 +34,7 @@ constexpr size_t getHeapSmemSize(size_t valueSize, size_t indexSize, int numThre
  * \tparam  I                   type of the index
  * \tparam  ThreadsPerBlock     #threads within the block
  * \tparam  HeapSize            size of a single heap
- * \tparam  isMinHeap           true for min-heap, false for max-heap
+ * \tparam  isMinHeap           true for min-heap (top-k), false for max-heap (bottom-k)
  */
 template <typename V, typename I, int ThreadsPerBlock, int HeapSize, bool isMinHeap>
 class PerWarpHeap {
@@ -58,7 +59,7 @@ class PerWarpHeap {
         int warpId = threadIdx.x / kWarpSize;
         int laneId = getLaneId();
 
-        auto vStart = getValueStart();
+        auto vStart = getValuesStart();
         heapValues = &vStart[warpId * HeapSize];
         auto iStart = getIndicesStart();
         heapIndices = &iStart[warpId * HeapSize];
@@ -74,7 +75,7 @@ class PerWarpHeap {
      * \brief   return a pointer to the start of our block-wide value storage
      * \return  a pointer to the start of our block-wide value storage
      */
-    inline __device__ V* getValueStart() {
+    inline __device__ V* getValuesStart() {
         return (V*)heapBase;
     }
 
@@ -84,7 +85,7 @@ class PerWarpHeap {
      */
     inline __device__ I* getIndicesStart() {
         constexpr int warpsPerBlock = ThreadsPerBlock / kWarpSize;
-        return (I*)&getValueStart()[warpsPerBlock * HeapSize];
+        return (I*)&getValuesStart()[warpsPerBlock * HeapSize];
     }
     
     /*!
@@ -133,7 +134,7 @@ class PerWarpHeap {
                  *  \note   prevent the compiler optimization of caching the write to shared
                  *          memory in the register, make sure all smem writes are immediately
                  *          visible to other thread within the warp
-                 *  \note   is there no warp-wise shared memory fence?   
+                 *  \note   is there no warp-wise shared memory fence?
                  *  \ref    https://stackoverflow.com/a/5243177/14377282
                  */
                 __threadfence_block();
@@ -148,7 +149,14 @@ class PerWarpHeap {
      * \brief   reduce all per-warp heaps to a unified, sorted list
      */
     inline __device__ void reduceHeaps() {
-        // TODO:
+        constexpr int allHeapSize = (ThreadsPerBlock / kWarpSize) * HeapSize;
+        if(isMinHeap) { // Top-K with descending order
+            bitonicSortBlock<GTComp<V, I>, V, I, allHeapSize, ThreadsPerBlock>(
+                getValuesStart(), getIndicesStart(), GTComp<V, I>());
+        } else { // Bottom-K with ascending order
+            bitonicSortBlock<LTComp<V, I>, V, I, allHeapSize, ThreadsPerBlock>(
+                getValuesStart(), getIndicesStart(), LTComp<V, I>());
+        }
     }
 
     /*!
@@ -185,7 +193,7 @@ class PerWarpHeap {
          */
         for (int levels = 0; levels < IntegerLog2(HeapSize / 2); ++levels) {
             int leftChildPos = currentHeapPos * 2 + 1;
-            int rightChildPos = leftChild + 1;
+            int rightChildPos = leftChildPos + 1;
             V leftChildValue = heapValues[leftChildPos];
             V rightChildValue = heapValues[rightChildPos];
 
@@ -223,3 +231,49 @@ class PerWarpHeap {
     // start address of the indices part within the heap of current warp
     I *heapIndices;
 };
+
+
+template <typename V, typename I, typename OutIndexType, int ThreadsPerBlock, int HeapSize, bool isMinHeap>
+__global__ void perWarpHeapTopK(
+        const V* input,             // m x n
+        V* outValues,               // m x k
+        OutIndexType* outIndices,   // m x k
+        V initVal, I initIndex,
+        int m,                      // #batch
+        int n,                      // batch size
+        int k                       // k
+) {
+    uint64_t i;
+    extern __shared__ float smem[];
+    PerWarpHeap<V, I, ThreadsPerBlock, HeapSize, isMinHeap> heap(
+        smem, initVal, initIndex);
+
+    auto inputStart = &input[blockIdx.x * n];
+
+    // insert elements into per-warp heap
+    V val;
+    for(i=threadIdx.x; i<n; i+=blockDim.x){
+        val = inputStart[i];
+        heap.add(val, (I)i);
+    }
+
+    // when finished, we restructure the heaps in shared memory, 
+    // the heaps are actually of size HeapSize - 1 (e.g., 32 -> 31); the
+    // extra element should have remained untouched, so we can still
+    // sort things in-place as a power of 2.
+    __syncthreads();
+
+    // sort multiple per-warp heap, into a continuously array
+    heap.reduceHeaps();
+
+    // write out top(bottom)-k values and their corresponding indices
+    auto outValuesStart = &outValues[blockIdx.x * k];
+    auto outIndicesStart = &outIndices[blockIdx.x * k];
+    auto heapValues = heap.getValuesStart();
+    auto heapIndices = heap.getIndicesStart();
+
+    for (i = threadIdx.x; i < n && i < k; i += blockDim.x) {
+        outValuesStart[i] = heapValues[i];
+        outIndicesStart[i] = (OutIndexType)heapIndices[i];
+    }
+}

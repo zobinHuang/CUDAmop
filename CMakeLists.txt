@@ -25,7 +25,7 @@ find_library(CUDA_NVTX_LIBRARY
 )
 
 # ====================== OPERATOR LIBRARY ======================
-file(GLOB_RECURSE SRC_OPERATORS "src/**/*.cu" "src/**/*.cpp")
+file(GLOB_RECURSE SRC_OPERATORS "src/*.cu" "src/*.cpp" "src/**/*.cu" "src/**/*.cpp")
 add_library(_operators ${SRC_OPERATORS})
 target_compile_features(_operators PUBLIC cxx_std_11)
 target_compile_options(
@@ -74,6 +74,11 @@ file(GLOB_RECURSE SRC_SPMV_CPP ${SRC_SPMV}/*.cpp)
 add_executable(spmv_csr_scalar ${SRC_SPMV}/scalar.cu ${SRC_SPMV_CPP})
 add_executable(spmv_csr_vector ${SRC_SPMV}/vector.cu ${SRC_SPMV_CPP})
 
+# >>> TopK
+SET(SRC_TOPK profiling/topk)
+file(GLOB_RECURSE SRC_TOPK_CPP ${SRC_TOPK}/*.cpp)
+add_executable(topk ${SRC_TOPK}/mix_test.cu ${SRC_TOPK_CPP})
+
 # >>> global configuration
 set(PROFILING_TARGETS 
   basic_vector_addition
@@ -88,6 +93,7 @@ set(PROFILING_TARGETS
   cublas_matrix_multiplication
   spmv_csr_scalar
   spmv_csr_vector
+  topk
 )
 foreach( profiling_target ${PROFILING_TARGETS} )
   target_link_libraries(${profiling_target} _operators nvToolsExt -lcublas -lcurand)

@@ -11,4 +11,14 @@ constexpr int IntegerLog2(T n, int p = 0) {
   return (n <= 1) ? p : IntegerLog2(n / 2, p + 1);
 }
 
+/*!
+ * \brief   judge whether the integer is power of 2
+ * \param   v   the given integer
+ * \return  the judgement result
+*/
+template <typename T>
+constexpr bool IntegerIsPowerOf2(T v) {
+  return (v && !(v & (v - 1)));
+}
+
 #endif

@@ -28,6 +28,7 @@ find_library(CUDA_NVTX_LIBRARY
 file(GLOB_RECURSE SRC_OPERATORS "src/*.cu" "src/*.cpp" "src/**/*.cu" "src/**/*.cpp")
 add_library(_operators ${SRC_OPERATORS})
 target_compile_features(_operators PUBLIC cxx_std_11)
+target_include_directories(_operators PUBLIC include)
 target_compile_options(
   _operators PUBLIC 
   $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_80,code=sm_80>
@@ -77,7 +78,7 @@ add_executable(spmv_csr_vector ${SRC_SPMV}/vector.cu ${SRC_SPMV_CPP})
 # >>> TopK
 SET(SRC_TOPK profiling/topk)
 file(GLOB_RECURSE SRC_TOPK_CPP ${SRC_TOPK}/*.cpp)
-add_executable(topk ${SRC_TOPK}/mix_test.cu ${SRC_TOPK_CPP})
+add_executable(topk ${SRC_TOPK}/main.cu ${SRC_TOPK_CPP})
 
 # >>> global configuration
 set(PROFILING_TARGETS 

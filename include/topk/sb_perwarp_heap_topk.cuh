@@ -1,14 +1,28 @@
-/*!
- * \file    min_heap_topk.cu
- * \brief   Operator for sort-based top-k operation
- * \author  Zhuobin Huang
- * \date    May. 1, 2023
- */
+#ifndef _SB_PERWARP_HEAP_TOP_K_CUH_
+#define _SB_PERWARP_HEAP_TOP_K_CUH_
 
-#include "cudamop.cuh"
-#include "gpu_utils.cuh"
-#include "math_util.cuh"
-#include "sort.cuh"
+#include <cudamop.cuh>
+#include <utils/gpu.cuh>
+#include <utils/math.cuh>
+#include <sort/bitonic_sort.cuh>
+
+namespace cudamop {
+
+namespace topk {
+
+namespace single_block {
+
+namespace heap {
+
+template<typename Comparator, typename K, typename V, int Power2SortSize, int ThreadsPerBlock>
+constexpr auto bitonicSortBlock
+    = cudamop::sort::bitonic::bitonicSortBlock<Comparator,K,V,Power2SortSize,ThreadsPerBlock>;
+
+template <typename K, typename V>
+using LTComp = cudamop::sort::bitonic::LTComp<K,V>;
+
+template <typename K, typename V>
+using GTComp = cudamop::sort::bitonic::GTComp<K,V>;
 
 /*!
  * \brief   obtain the overall share memory size that the heap occupies
@@ -57,7 +71,7 @@ class PerWarpHeap {
         heapBase = smem;
         int i;
         int warpId = threadIdx.x / kWarpSize;
-        int laneId = getLaneId();
+        int laneId = cudamop::utils::getLaneId();
 
         auto vStart = getValuesStart();
         heapValues = &vStart[warpId * HeapSize];
@@ -116,7 +130,7 @@ class PerWarpHeap {
         }
         
         // calculate how many thread before current thread within the warp want insert
-        int wantInsertIndex = __popc(getLaneMaskLt() & vote);
+        int wantInsertIndex = __popc(cudamop::utils::getLaneMaskLt() & vote);
 
         // calculate the overall number of threads that want insert
         int total = __popc(vote);
@@ -131,8 +145,9 @@ class PerWarpHeap {
                 _warpHeapInsert(value, index);
 
                 /*!
-                 *  \note   prevent the compiler optimization of caching the write to shared
-                 *          memory in the register, make sure all smem writes are immediately
+                 *  \note   the following part is expected to be executed serially thread-by-thread,
+                 *          so we need to prevent the compiler optimization of caching the write to 
+                 *          shared memory in the register, make sure all smem writes are immediately
                  *          visible to other thread within the warp
                  *  \note   is there no warp-wise shared memory fence?
                  *  \ref    https://stackoverflow.com/a/5243177/14377282
@@ -191,7 +206,7 @@ class PerWarpHeap {
          *          heap size 8 means there are 7 elements in the heap, indices 0-6 (0 12 3456)
          *          log2(8 / 2) = 2 levels of interior nodes for heap size 8 (0 and 12)
          */
-        for (int levels = 0; levels < IntegerLog2(HeapSize / 2); ++levels) {
+        for (int levels = 0; levels < cudamop::utils::IntegerLog2(HeapSize / 2); ++levels) {
             int leftChildPos = currentHeapPos * 2 + 1;
             int rightChildPos = leftChildPos + 1;
             V leftChildValue = heapValues[leftChildPos];
@@ -233,11 +248,11 @@ class PerWarpHeap {
 };
 
 
-template <typename V, typename I, typename OutIndexType, int ThreadsPerBlock, int HeapSize, bool isMinHeap>
+template <typename V, typename I, int ThreadsPerBlock, int HeapSize, bool isMinHeap>
 __global__ void perWarpHeapTopK(
         const V* input,             // m x n
         V* outValues,               // m x k
-        OutIndexType* outIndices,   // m x k
+        I* outIndices,   // m x k
         V initVal, I initIndex,
         int m,                      // #batch
         int n,                      // batch size
@@ -274,6 +289,16 @@ __global__ void perWarpHeapTopK(
 
     for (i = threadIdx.x; i < n && i < k; i += blockDim.x) {
         outValuesStart[i] = heapValues[i];
-        outIndicesStart[i] = (OutIndexType)heapIndices[i];
+        outIndicesStart[i] = (I)heapIndices[i];
     }
 }
+
+} // namespace heap
+
+} // namespace single_block
+
+} // namespace topk
+
+} // namespace cudamop
+
+#endif

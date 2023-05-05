@@ -1,12 +1,29 @@
-/*!
- * \file    bitonic.cu
- * \brief   Operator for bitonic sort operation
- * \author  Zhuobin Huang
- * \date    May. 2, 2023
- */
+#ifndef _BITONIC_SORT_CUH_
+#define _BITONIC_SORT_CUH_
 
-#include "sort.cuh"
-#include "math_util.cuh"
+namespace cudamop {
+
+namespace sort {
+
+namespace bitonic {
+
+constexpr int kMaxBitonicSortSize = 4096;
+
+template <typename K, typename V>
+struct LTComp {
+  __device__ inline bool
+  operator()(const K& kA, const V& vA, const K& kB, const V& vB) const {
+    return (kA < kB) || ((kA == kB) && (vA < vB));
+  }
+};
+
+template <typename K, typename V>
+struct GTComp {
+  __device__ inline bool
+  operator()(const K& kA, const V& vA, const K& kB, const V& vB) const {
+    return (kA > kB) || ((kA == kB) && (vA < vB));
+  }
+};
 
 /*!
  * \brief   swap two data
@@ -62,8 +79,8 @@ __device__ inline void bitonicSortBlock(K* keys, V* values, const Comparator& co
     int monotonicLen, stride, loop;
 
     static_assert(Power2SortSize <= kMaxBitonicSortSize, "sort size <= 4096 only supported");
-    static_assert(IntegerIsPowerOf2(Power2SortSize), "sort size must be power of 2");
-    static_assert(IntegerIsPowerOf2(ThreadsPerBlock), "threads in block must be power of 2");
+    static_assert(cudamop::utils::IntegerIsPowerOf2(Power2SortSize), "sort size must be power of 2");
+    static_assert(cudamop::utils::IntegerIsPowerOf2(ThreadsPerBlock), "threads in block must be power of 2");
 
     // e.g., we have 16 elements to be sorted, only 8 comparators are needed
     // #threads == #comparators
@@ -81,10 +98,10 @@ __device__ inline void bitonicSortBlock(K* keys, V* values, const Comparator& co
     for (monotonicLen=2; monotonicLen<Power2SortSize; monotonicLen*=2) {
 
 #pragma unroll
-        for (int stride=monotonicLen/2; stride>0; stride/=2) {
+        for (stride=monotonicLen/2; stride>0; stride/=2) {
 
 #pragma unroll
-            for (int loop=0; loop<loopPerThread; ++loop) {
+            for (loop=0; loop<loopPerThread; ++loop) {
                 // index of comparator
                 int comparatorIndex = loop * ThreadsPerBlock + threadIdx.x;
 
@@ -119,10 +136,10 @@ __device__ inline void bitonicSortBlock(K* keys, V* values, const Comparator& co
      * \note    sorting based on the constructed bitonic sequence
      */
 #pragma unroll
-    for (int stride=Power2SortSize/2; stride>0; stride /= 2) {
+    for (stride=Power2SortSize/2; stride>0; stride /= 2) {
 
 #pragma unroll
-        for (int loop = 0; loop < loopPerThread; ++loop) {
+        for (loop = 0; loop < loopPerThread; ++loop) {
             // index of comparator
             int comparatorIndex = loop * ThreadsPerBlock + threadIdx.x;
 
@@ -142,3 +159,10 @@ __device__ inline void bitonicSortBlock(K* keys, V* values, const Comparator& co
     }
 }
 
+} // namespace bitonic
+
+} // namespace sort
+
+} // namespace cudamop
+
+#endif

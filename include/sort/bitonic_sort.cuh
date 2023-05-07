@@ -149,9 +149,10 @@ __device__ inline void bitonicSortBlock(K* keys, V* values, const Comparator& co
             if (allThreads || (comparatorIndex < numThreadsForSort)) {
                 // note: reverse all comparation
                 bitonicSwap<Comparator, K, V>(
-                keys[formerIndex], values[formerIndex],
-                keys[formerIndex + stride], values[formerIndex + stride],
-                false, comp);
+                  keys[formerIndex], values[formerIndex],
+                  keys[formerIndex + stride], values[formerIndex + stride],
+                  false, comp
+                );
             }
 
             __syncthreads();

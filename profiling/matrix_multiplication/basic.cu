@@ -73,10 +73,10 @@ int main(){
 
   // launch kernel
   PROFILE(
-      std::cout << "Launch Kernel: " 
-      << NUM_THREADS_PER_BLOCK << " threads per block, " 
-      << NUM_BLOCKS << " blocks in the grid" 
-      << std::endl;
+      // std::cout << "Launch Kernel: " 
+      // << NUM_THREADS_PER_BLOCK << " threads per block, " 
+      // << NUM_BLOCKS << " blocks in the grid" 
+      // << std::endl;
       nvtxRangePush("start kernel");
   )
   squareMatrixMul<<<blocks, threads>>>(d_matrix_A, d_matrix_B, d_matrix_C, N);

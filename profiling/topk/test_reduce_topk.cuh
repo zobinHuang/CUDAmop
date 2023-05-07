@@ -48,34 +48,30 @@ void testReduce(uint32_t m, uint32_t n, uint32_t k,
   PROFILE(nvtxRangePop();)
 
   PROFILE(
-    std::cout << "Launch Stage 1 Kernel: " 
-      << kBlockSize_1 << " threads per block, " 
-      << kBlockPerBatch_1 * m << " blocks in the grid"
-      << std::endl;
+    // std::cout << "Launch Stage 1 Kernel: " 
+    //   << kBlockSize_1 << " threads per block, " 
+    //   << kBlockPerBatch_1 * m << " blocks in the grid"
+    //   << std::endl;
     nvtxRangePush("start stage 1 kernel");
   )
   reduceTopKStage1<V, I, kBlockSize_1, kBlockPerBatch_1, isTopK>
     <<<m*kBlockPerBatch_1,kBlockSize_1>>>(d_values, d_temp_values, d_output_values, d_temp_output_values, d_output_indices, d_temp_output_indices, m, n, k);
+  cudaDeviceSynchronize();
   PROFILE(
-    // cudaDeviceSynchronize is not necessary as following cudaMemcpy would
-    // act as synchronization barrier, used here for profiling log
-    cudaDeviceSynchronize();
     nvtxRangePop();
   )
 
   PROFILE(
-    std::cout << "Launch Stage 2 Kernel: " 
-      << kBlockSize_2 << " threads per block, " 
-      << m << " blocks in the grid"
-      << std::endl;
-    nvtxRangePush("start stage 1 kernel");
+    // std::cout << "Launch Stage 2 Kernel: " 
+    //   << kBlockSize_2 << " threads per block, " 
+    //   << m << " blocks in the grid"
+    //   << std::endl;
+    nvtxRangePush("start stage 2 kernel");
   )
   reduceTopKStage2<V, I, kBlockSize_2, kBlockPerBatch_1, isTopK>
     <<<m,kBlockSize_2>>>(d_values, d_temp_values, d_output_values, d_temp_output_values, d_output_indices, d_temp_output_indices, m, n, k);
+  cudaDeviceSynchronize();
   PROFILE(
-    // cudaDeviceSynchronize is not necessary as following cudaMemcpy would
-    // act as synchronization barrier, used here for profiling log
-    cudaDeviceSynchronize();
     nvtxRangePop();
   )
 }

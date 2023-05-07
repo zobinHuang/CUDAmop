@@ -90,10 +90,10 @@ int main(){
 
     // launch naive kernel
     PROFILE(
-        std::cout << "Launch Kernel: " 
-        << NUM_THREADS_PER_BLOCK << " threads per block, " 
-        << NUM_BLOCKS << " blocks in the grid" 
-        << std::endl;
+        // std::cout << "Launch Kernel: " 
+        // << NUM_THREADS_PER_BLOCK << " threads per block, " 
+        // << NUM_BLOCKS << " blocks in the grid" 
+        // << std::endl;
         nvtxRangePush("launch naive kernel");
     )
     CSRSpMVVector<<<NUM_BLOCKS, NUM_THREADS_PER_BLOCK>>>(num_row, d_col_ids, d_row_ptr, d_data, d_x, d_y);

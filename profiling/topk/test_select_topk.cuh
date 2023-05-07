@@ -30,15 +30,15 @@ constexpr auto radixSelectTopK
     = cudamop::topk::single_block::select::radixSelectTopK<V,I,withKthValues,isTopK>;
 
 template<typename V, typename I, int kBlockSize, bool isTopK>
-void testradixSelect(uint32_t m, uint32_t n, uint32_t k,
+void testRadixSelect(uint32_t m, uint32_t n, uint32_t k,
     V *d_values, V *d_output_values,
     I *d_indices, I *d_output_indices
 ){
     PROFILE(
-        std::cout << "Launch Kernel: " 
-        << kBlockSize << " threads per block, " 
-        << m << " blocks in the grid" 
-        << std::endl;
+        // std::cout << "Launch Kernel: " 
+        // << kBlockSize << " threads per block, " 
+        // << m << " blocks in the grid" 
+        // << std::endl;
         nvtxRangePush("start kernel");
     )
     radixSelectTopK<V, I, false, true><<<m, kBlockSize>>>

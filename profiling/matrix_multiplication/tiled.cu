@@ -76,10 +76,10 @@ int main(){
 
   // launch kernel
   PROFILE(
-      std::cout << "Launch Kernel: " 
-      << NUM_THREADS_PER_BLOCK << " threads per block, " 
-      << NUM_BLOCKS << " blocks in the grid" 
-      << std::endl;
+      // std::cout << "Launch Kernel: " 
+      // << NUM_THREADS_PER_BLOCK << " threads per block, " 
+      // << NUM_BLOCKS << " blocks in the grid" 
+      // << std::endl;
       nvtxRangePush("start kernel");
   )
   tiledSquareMatrixMul<<<blocks, threads, shared_memory_size>>>(

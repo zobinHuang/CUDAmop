@@ -122,10 +122,10 @@ class PerWarpHeap {
 
         // find out all the lanes that have elements to add to the heap
         // within the warp
-        unsigned int vote = __ballot_sync(__activemask(), wantInsert);
+        unsigned int vote = cudamop::utils::getWarpBallot(wantInsert, cudamop::utils::getActiveMask());
 
         if (!vote) {
-            // everything the warp has is smaller than our heap
+            // everything in the warp has is smaller than our heap
             return;
         }
         
@@ -165,10 +165,12 @@ class PerWarpHeap {
      */
     inline __device__ void reduceHeaps() {
         constexpr int allHeapSize = (ThreadsPerBlock / kWarpSize) * HeapSize;
-        if(isMinHeap) { // Top-K with descending order
+        if(isMinHeap) { 
+            // Top-K with descending order
             bitonicSortBlock<GTComp<V, I>, V, I, allHeapSize, ThreadsPerBlock>(
                 getValuesStart(), getIndicesStart(), GTComp<V, I>());
-        } else { // Bottom-K with ascending order
+        } else { 
+            // Bottom-K with ascending order
             bitonicSortBlock<LTComp<V, I>, V, I, allHeapSize, ThreadsPerBlock>(
                 getValuesStart(), getIndicesStart(), LTComp<V, I>());
         }
@@ -265,11 +267,15 @@ __global__ void perWarpHeapTopK(
 
     auto inputStart = &input[blockIdx.x * n];
 
+    // printf("block id: %d\n", blockIdx.x);
+
     // insert elements into per-warp heap
     V val;
     for(i=threadIdx.x; i<n; i+=blockDim.x){
         val = inputStart[i];
         heap.add(val, (I)i);
+        // if(blockIdx.x == 0)
+        //     printf("blockId: %u, elementId: %u, value: %f\n", blockIdx.x, i, val);
     }
 
     // when finished, we restructure the heaps in shared memory, 
@@ -286,6 +292,12 @@ __global__ void perWarpHeapTopK(
     auto outIndicesStart = &outIndices[blockIdx.x * k];
     auto heapValues = heap.getValuesStart();
     auto heapIndices = heap.getIndicesStart();
+
+    // if(blockIdx.x == 0 && threadIdx.x == 0){
+    //     for(i=0; i<k; i++){
+    //         printf("topk result - blockId: %u, elementId: %u, value: %f\n", blockIdx.x, heapValues[i], val);
+    //     }
+    // }
 
     for (i = threadIdx.x; i < n && i < k; i += blockDim.x) {
         outValuesStart[i] = heapValues[i];

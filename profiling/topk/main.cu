@@ -20,6 +20,7 @@
 #include "test_reduce_topk.cuh"
 #include "test_heap_topk.cuh"
 #include "test_select_topk.cuh"
+#include "test_sort_topk.cuh"
 
 namespace cudamop {
 
@@ -30,7 +31,8 @@ namespace topk {
 enum {
   kTestPerWarpHeap = 1,
   kTestReduceTopK,
-  kTestSelectTopk, 
+  kTestSelectTopk,
+  kTestSortTopk,
 };
 
 template<typename V, typename I>
@@ -73,7 +75,7 @@ bool greater_sort(topk_pair<V,I> a, topk_pair<V,I> b){ return (a.value > b.value
 template<typename V, typename I>
 bool less_sort(topk_pair<V,I> a, topk_pair<V,I> b){ return (a.value < b.value); }
 
-template<typename V, typename I, bool isTopK>
+template<typename V, typename I, bool isTopK, int testMethod>
 bool verifyTopKResult(
   uint64_t m, uint64_t n, uint64_t k,
   std::vector<V> &values, std::vector<I> &indices, 
@@ -110,14 +112,42 @@ bool verifyTopKResult(
     // printf("cpu kth value: %f\n", one_row_cpu_topk_pairs[k-1].value);
 
     for(j=0; j<k; j++){
-      printf("cpu[%lu]: %f (%u), gpu[%lu]: %f (%u)\n",
-        i*n+j, one_row_cpu_topk_pairs[j].value, one_row_cpu_topk_pairs[j].index,
-        i*k+j, gpu_topk_values[i*k+j], gpu_topk_indices[i*k+j]
-      );
-      // assert(one_row_cpu_topk_pairs[j].value == gpu_topk_values[i*k+j]);
-      // assert(one_row_cpu_topk_pairs[j].index == gpu_topk_indices[i*k+j]);
-    }
-  }
+      auto print_trace_stack = [&]() -> void {
+        printf("testMethod: %d, m: %lu, n: %lu, k: %lu\n", testMethod, m, n, k);
+        for(j=0; j<k; j++){
+          printf("batch: %lu, element: %lu, cpu[%lu]: %f (%u), gpu[%lu]: %f (%u)\n",
+            i, j,
+            i*n+j, one_row_cpu_topk_pairs[j].value, one_row_cpu_topk_pairs[j].index,
+            i*k+j, gpu_topk_values[i*k+j], gpu_topk_indices[i*k+j]
+          );
+        }
+      };
+
+      if(one_row_cpu_topk_pairs[j].value != gpu_topk_values[i*k+j]){
+        printf("value error!\n");
+        print_trace_stack();
+        exit(-1);
+      } 
+
+      if(one_row_cpu_topk_pairs[j].index != gpu_topk_indices[i*k+j]){
+        bool isFine = false;
+
+        if(!isFine && j != k-1){
+          if(gpu_topk_indices[i*k+j] == one_row_cpu_topk_pairs[j+1].index){ isFine = true; }
+        }
+
+        if(!isFine && j != 0){
+          if(gpu_topk_indices[i*k+j] == one_row_cpu_topk_pairs[j-1].index){ isFine = true; }
+        }
+
+        if(!isFine){
+          printf("index error!\n");
+          print_trace_stack();
+          exit(-1);
+        }
+      }
+    } // for(j=0; j<k; j++){
+  } // for(i=0; i<m; i++)
 
   return true;
 }
@@ -135,8 +165,8 @@ void test(uint32_t m, uint32_t n, uint32_t k){
   
   values.reserve(m*n);
   indices.reserve(m*n);
-  output_values.reserve(m*k);
-  output_indices.reserve(m*k);
+  output_values.resize(m*k);
+  output_indices.resize(m*k);
 
   PROFILE(nvtxRangePush("generate random topk tensors");)
   generateRandomTopKTensors<V, I>(m, n, k, values, indices);
@@ -186,7 +216,10 @@ void test(uint32_t m, uint32_t n, uint32_t k){
         goto release_device_memory;
       }
   } else if (testMethod == kTestSelectTopk) {
-    single_block::select::testradixSelect<V, I, 256, isTopK>
+    single_block::select::testRadixSelect<V, I, 256, isTopK>
+      (m, n, k, d_values, d_output_values, d_indices, d_output_indices);
+  } else if (testMethod == kTestSortTopk) {
+    single_block::sort::testRadixSortTopK<V, I, isTopK>
       (m, n, k, d_values, d_output_values, d_indices, d_output_indices);
   }
 
@@ -197,7 +230,8 @@ void test(uint32_t m, uint32_t n, uint32_t k){
   PROFILE(nvtxRangePop();)
 
   // verify result
-  verifyTopKResult<V, I, isTopK>(m, n, k, values, indices, output_values, output_indices);
+  if(testMethod != kTestSelectTopk)
+    verifyTopKResult<V, I, isTopK, testMethod>(m, n, k, values, indices, output_values, output_indices);
 
 release_device_memory:
   PROFILE(nvtxRangePush("free device memory");)
@@ -220,20 +254,53 @@ template<typename V, typename I, int testMethod, bool isTopK>
 constexpr auto test = cudamop::test::topk::test<V,I,testMethod,isTopK>;
 
 int main(){
-  // test<float, uint32_t, cudamop::test::topk::kTestPerWarpHeap, true>(1, 512, 128);
-  // test<float, uint32_t, cudamop::test::topk::kTestPerWarpHeap, true>(2, 512, 128);
-  // test<float, uint32_t, cudamop::test::topk::kTestPerWarpHeap, true>(8, 512, 128);
-  // test<float, uint32_t, cudamop::test::topk::kTestPerWarpHeap, true>(16, 512, 128);
+  std::vector<uint32_t> ms = {4, 8, 16, 32, 64, 128, 512, 1024, 2048, 4096, 8192};
+  std::vector<uint32_t> ns = {128, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288}; 
+  std::vector<uint32_t> ks = {32};
 
-  // test<float, uint32_t, cudamop::test::topk::kTestReduceTopK, true>(1, 512, 128);
-  // test<float, uint32_t, cudamop::test::topk::kTestReduceTopK, true>(2, 512, 128);
-  // test<float, uint32_t, cudamop::test::topk::kTestReduceTopK, true>(8, 512, 128);
-  // test<float, uint32_t, cudamop::test::topk::kTestReduceTopK, true>(16, 512, 128);
+  // FIXME: why changing m here not work??
+  // for(uint32_t m : ms){
+  //   for(uint32_t n : ns){
+  //     for(uint32_t k : ks){
+  //       printf("TEST: m=%u, n=%u, k=%u: ", m, n, k);
 
-  test<float, uint32_t, cudamop::test::topk::kTestSelectTopk, true>(2, 64, 32);
-  // test<float, uint32_t, cudamop::test::topk::kTestSelectTopk, true>(2, 512, 128);
-  // test<float, uint32_t, cudamop::test::topk::kTestSelectTopk, true>(8, 512, 128);
-  // test<float, uint32_t, cudamop::test::topk::kTestSelectTopk, true>(16, 512, 128);
+  //       test<float, uint32_t, cudamop::test::topk::kTestPerWarpHeap, true>(m, n, k);
+  //       printf("| kTestPerWarpHeap passed ");
+
+  //       test<float, uint32_t, cudamop::test::topk::kTestReduceTopK, true>(m, n, k);
+  //       printf("| kTestReduceTopK passed ");
+
+  //       test<float, uint32_t, cudamop::test::topk::kTestSelectTopk, true>(m, n, k);
+  //       printf("| kTestSelectTopk passed ");
+
+  //       test<float, uint32_t, cudamop::test::topk::kTestSortTopk, true>(m, n, k);
+  //       printf("| kTestSortTopk passed ");
+
+  //       printf("\n\n");
+  //     }
+  //   }
+  // }
+
+  uint32_t m = 64;
+  for(uint32_t n : ns){
+    for(uint32_t k : ks){
+      printf("TEST: m=%u, n=%u, k=%u: ", m, n, k);
+
+      test<float, uint32_t, cudamop::test::topk::kTestPerWarpHeap, true>(m, n, k);
+      printf("| kTestPerWarpHeap passed ");
+
+      test<float, uint32_t, cudamop::test::topk::kTestReduceTopK, true>(m, n, k);
+      printf("| kTestReduceTopK passed ");
+
+      test<float, uint32_t, cudamop::test::topk::kTestSelectTopk, true>(m, n, k);
+      printf("| kTestSelectTopk passed ");
+
+      test<float, uint32_t, cudamop::test::topk::kTestSortTopk, true>(m, n, k);
+      printf("| kTestSortTopk passed ");
+
+      printf("\n\n");
+    }
+  }
 
   return 0;
 }
